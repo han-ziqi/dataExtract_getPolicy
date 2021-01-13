@@ -43,9 +43,8 @@ def getData(baseurl):
         v0 = htmldict.get("searchVO").get('listVO')
         for item in v0:
             data = []  # 新建列表来存放一条政策内容
-            item = str(item)
 
-            titles = item[1:30]
+            titles = item.get('title')
             print(titles)
 
      # print(titles)
