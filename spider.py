@@ -4,8 +4,7 @@
 #@File : spider.py
 #@Software : PyCharm
 
-
-from bs4 import BeautifulSoup  # 网页解析，获取数据
+import json
 import re  # 正则表达式进行文字匹配
 import urllib.request, urllib.error  # 指定url获取网页数据
 import xlwt  # 进行Excel操作
@@ -19,89 +18,67 @@ def main():
 
     # 1、爬取网页
     datalist = getData(baseurl)
-    # savepath = "豆瓣电影Top250.xls"
+    # savepath = "政策解读.xls"
     # dbpath = "movie.db"
     # 3、保存数据
     # saveData(datalist, savepath)
     # saveData2DB(datalist, dbpath)
 
-
-'''
-# 影片链接的规则
-findLink = re.compile(r'<a href="(.*?)">')  # 创建正则表达式对象，表示规则（字符串的模式）
-# 影片图片
-findImgSrc = re.compile(r'<img.*src="(.*?)"', re.S)  # re.S作用是让换行符包含在字符中
-# 影片片名
-findTitle = re.compile(r'<span class="title">(.*)</span>')
-# 影片评分
-findRating = re.compile(r'<span class="rating_num" property="v:average">(.*)</span>')
-# 找到评价人数
-findJudge = re.compile(r'<span>(\d*)人评价</span>')
-# 找到概况
-findInq = re.compile(r'<span class="inq">(.*)</span>')
-# 找到影片相关内容
-findBd = re.compile(r'<p class="">(.*?)</p>', re.S)
-'''
+# findTitle = re.compile(r"title:""(\d+)")
 
 # 1、爬取网页
 def getData(baseurl):
     datalist = []
-    for i in range(-1, 9):  # 设置循环，i从0到100，每页10条
+
+    for i in range(-1, 0):  # 设置循环，i从0到100，每页10条
         url = baseurl + str(i + 1) + str("&n=10&inpro=&bmfl=&dup=&orpro=")
-        html = askURL(url)  # 保存获取到的网页源码
-        print(html)
+        htmlJson = askURL(url)  # 保存获取到的json对象
+        # print(htmlJson)
+        # print("__________-------------------------")
+
 
 
 # 2、逐一解析数据
-        soup = BeautifulSoup(html, "html.parser")  # parser是一个解析器
-        for item in soup.find_all('div', class_="item"):  # 查找符合要求的字符串，形成列表
-            print(item) #测试：查看电影全部信息
-            ''''''
-            data = []  # 保存一部电影全部信息
+        htmldict = json.loads(htmlJson) #将json对象转换为python字典
+        v0 = htmldict.get("searchVO").get('listVO')
+        for item in v0:
+            data = []  # 新建列表来存放一条政策内容
             item = str(item)
 
+            titles = item[1:30]
+            print(titles)
 
-            link = re.findall(findLink, item)[0]  # re库通过正则表达式查找字符串
-            data.append(link)  # 添加链接
+     # print(titles)
+     #    data.append(titles)
+     #
+     #    time = list.get('pubtimeStr')
+     #    data.append(time)
+     #
+     #    summary =list.get('summary')
+     #    data.append(summary)
+     #
+     #    url = list.get('url')
+     #    data.append(url)
+     #
+     #    print(data)
+     #    print(type(sjson))
+     #
+     #    title1 = sjson['title']
+     #    print(title)
+     #
+     #    # print(titles)
+     #
+     #
+     #
+     #        # data.append(title)
+     #
+     #    # print(data)
 
-            imgSrc = re.findall(findImgSrc, item)[0]
-            data.append(imgSrc)  # 添加图片
 
-            titles = re.findall(findTitle, item)  # 片名可能只有一个中文名，没有外国名，也有可能都有
-            if (len(titles) == 2):
-                ctitle = titles[0]
-                data.append(ctitle)  # 添加中文名
-                otitle = titles[1].replace("/", "")  # 去掉无关符号
-                data.append(otitle)  # 添加外国名
-            else:
-                data.append(titles[0])
-                data.append(' ')  # 外国名留空，保证格式整齐
 
-            rating = re.findall(findRating, item)[0]
-            data.append(rating)  # 添加评分
 
-            judgeNum = re.findall(findJudge, item)[0]
-            data.append(judgeNum)  # 添加评价人数
+    return datalist
 
-            inq = re.findall(findInq, item)
-            if len(inq) != 0:
-                inq = inq[0].replace("。", "")  # 去掉句号
-                data.append(inq)  # 添加概述
-            else:
-                data.append(" ")
-
-            bd = re.findall(findBd, item)[0]
-            bd = re.sub('<br(\s+)?/>(\s+)?', " ", bd)  # 去掉<br/>
-            bd = re.sub('/', " ", bd)  # 替换/
-            data.append(bd.strip())  # 去掉前后的空格
-
-            datalist.append(data)  # 把处理好的一部电影放进list中
-
-    # print(datalist)
-
-    # return datalist
-'''
-'''
 # 得到指定一个URL的网页内容
 def askURL(url):
     # 用户代理，表示告诉服务器，我们是什么浏览器，本质是告诉浏览器，我们可以接受什么水平的内容
