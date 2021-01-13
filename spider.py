@@ -18,10 +18,10 @@ def main():
 
     # 1、爬取网页
     datalist = getData(baseurl)
-    # savepath = "政策解读.xls"
+    savepath = "政策解读.xls"
     # dbpath = "movie.db"
     # 3、保存数据
-    # saveData(datalist, savepath)
+    saveData(datalist, savepath)
     # saveData2DB(datalist, dbpath)
 
 # findTitle = re.compile(r"title:""(\d+)")
@@ -30,7 +30,7 @@ def main():
 def getData(baseurl):
     datalist = []
 
-    for i in range(-1, 0):  # 设置循环，i从0到100，每页10条
+    for i in range(-1, 9):  # 设置循环，i从0到100，每页10条
         url = baseurl + str(i + 1) + str("&n=10&inpro=&bmfl=&dup=&orpro=")
         htmlJson = askURL(url)  # 保存获取到的json对象
         # print(htmlJson)
@@ -45,33 +45,20 @@ def getData(baseurl):
             data = []  # 新建列表来存放一条政策内容
 
             titles = item.get('title')
-            print(titles)
+            data.append(titles)
 
-     # print(titles)
-     #    data.append(titles)
-     #
-     #    time = list.get('pubtimeStr')
-     #    data.append(time)
-     #
-     #    summary =list.get('summary')
-     #    data.append(summary)
-     #
-     #    url = list.get('url')
-     #    data.append(url)
-     #
-     #    print(data)
-     #    print(type(sjson))
-     #
-     #    title1 = sjson['title']
-     #    print(title)
-     #
-     #    # print(titles)
-     #
-     #
-     #
-     #        # data.append(title)
-     #
-     #    # print(data)
+            time = item.get('pubtimeStr')
+            data.append(time)
+
+            summary =item.get('summary')
+            data.append(summary)
+
+            url = item.get('url')
+            data.append(url)
+
+            datalist.append(data)
+        print(datalist)
+
 
 
 
@@ -96,23 +83,23 @@ def askURL(url):
     return html
 
 
-'''
+
 # 3、保存数据
 def saveData(datalist,savapath):
     print("开始储存数据")
     book = xlwt.Workbook(encoding="utf-8",style_compression=0)  # 创建workbook对象
-    sheet = book.add_sheet("豆瓣电影Top250",cell_overwrite_ok=True)  # 创建工作表
-    col = ("电影详情链接：", "图片链接", "影片中文名","影片外国名","评分","评价数","概况","相关信息")
-    for i in range(0, 8):
+    sheet = book.add_sheet("政策解读",cell_overwrite_ok=True)  # 创建工作表
+    col = ("政策标题", "政策发布时间", "政策摘要","政策链接")
+    for i in range(0, 4):
         sheet.write(0, i, col[i]) #列名
-    for i in range(0, 250):
+    for i in range(0, 100):
         print("第%d条"%(i+1))
         data = datalist[i]
-        for j in range(0,8):
+        for j in range(0,4):
             sheet.write(i+1,j,data[j])  #数据
 
     book.save(savapath)
-'''
+
 
 '''
 # 4、保存数据到数据库
