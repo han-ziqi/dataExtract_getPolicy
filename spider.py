@@ -51,7 +51,7 @@ def getData(baseurl):
         html = askURL(url)  # 保存获取到的网页源码
         print(html)
 
-'''
+
 # 2、逐一解析数据
         soup = BeautifulSoup(html, "html.parser")  # parser是一个解析器
         for item in soup.find_all('div', class_="item"):  # 查找符合要求的字符串，形成列表
@@ -98,7 +98,7 @@ def getData(baseurl):
             datalist.append(data)  # 把处理好的一部电影放进list中
 
     # print(datalist)
-'''
+
     # return datalist
 '''
 '''
