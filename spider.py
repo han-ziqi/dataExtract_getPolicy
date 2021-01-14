@@ -23,7 +23,7 @@ def main():
     savepath = "政策解读.xls"
     # dbpath = "movie.db"
     # 3、保存数据
-    # saveData(datalist, savepath)
+    saveData(datalist, savepath)
     # saveData2DB(datalist, dbpath)
 
 # findTitle = re.compile(r"title:""(\d+)")
@@ -32,8 +32,8 @@ def main():
 def getData(baseurl):
     datalist = []
 
-    for i in range(-1, 0):  # 设置循环，i从0到100，每页10条
-        url = baseurl + str(i + 1) + str("&n=2&inpro=&bmfl=&dup=&orpro=")
+    for i in range(-1, 9):  # 设置循环，i从0到100，每页10条
+        url = baseurl + str(i + 1) + str("&n=10&inpro=&bmfl=&dup=&orpro=")
         htmlJson = askURL(url)  # 保存获取到的json对象
 
 # 2.1 逐一解析数据
@@ -54,15 +54,16 @@ def getData(baseurl):
             urlDe = item.get('url')
             data.append(urlDe)  #添加标题
 
-            htmldetail = getDetails(urlDe)  #获取详情页URL
-            fwords = getFormatWord(htmldetail)     #调用2.4，得到有格式的正文
-            data.append(fwords) #添加带格式的标题
+            htmldetail = getDetails(urlDe)      #获取详情页URL
+            fwords = getFormatWord(htmldetail)     #调用2.4，得到有格式的正文(item1)
+            data.append(fwords)                   #添加带格式的内容
 
-            # print(words)
-            # print(htmldetail)
+            pwords = getPureWord(htmldetail)      #调用2.5，得到无格式的正文(item2)
+            data.append(pwords)                     #添加不带格式的内容
 
             datalist.append(data)
-        print(datalist)
+
+            print(datalist)  #预览效果
 
 
     return datalist
@@ -101,14 +102,19 @@ def getDetails(urlDe):
 
 # 2.4 解析获取到详情页，带格式的data传回2.1
 def getFormatWord(htmldetail):
-    soup = BeautifulSoup(htmldetail,"html.parser")
-    for item in soup.find_all('div',class_="pages_content"):
-        item = str(item)
-        return item
+    soup = BeautifulSoup(htmldetail,"html.parser")  #解析页面
+    for item1 in soup.find_all('div',class_="pages_content"): # 提取div标签中class为pages_content的内容
+        item1 = str(item1)  #格式化成字符串形式
+        return item1
 
 # 2.5解析获取到详情页，不带格式的data传回2.1
 def getPureWord(htmldetail):
-    soup = BeautifulSoup()
+    soup = BeautifulSoup(htmldetail,"html.parser")
+    for item2 in soup.find_all('div',class_="pages_content"):
+        item2 = soup.find_all('p')
+        result = [p.get_text()for p in item2]
+        pword = "".join(result)  #使用join方法，分隔符为空
+    return pword
 
 
 
@@ -125,13 +131,13 @@ def saveData(datalist,savapath):
     print("开始储存数据")
     book = xlwt.Workbook(encoding="utf-8",style_compression=0)  # 创建workbook对象
     sheet = book.add_sheet("政策解读",cell_overwrite_ok=True)  # 创建工作表
-    col = ("政策标题", "政策发布时间", "政策摘要","政策链接","解读正文（带格式）")
-    for i in range(0, 5):
+    col = ("政策标题", "政策发布时间", "政策摘要","政策链接","解读正文(带格式)","解读正文(不带格式)")
+    for i in range(0, 6):
         sheet.write(0, i, col[i]) #列名
-    for i in range(0, 2):
+    for i in range(0, 100):
         print("第%d条"%(i+1))
         data = datalist[i]
-        for j in range(0,5):
+        for j in range(0,6):
             sheet.write(i+1,j,data[j])  #数据
 
     book.save(savapath)
