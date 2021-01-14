@@ -23,7 +23,7 @@ def main():
     savepath = "政策解读.xls"
     # dbpath = "movie.db"
     # 3、保存数据
-    saveData(datalist, savepath)
+    # saveData(datalist, savepath)
     # saveData2DB(datalist, dbpath)
 
 # findTitle = re.compile(r"title:""(\d+)")
@@ -32,8 +32,8 @@ def main():
 def getData(baseurl):
     datalist = []
 
-    for i in range(-1, 9):  # 设置循环，i从0到100，每页10条
-        url = baseurl + str(i + 1) + str("&n=10&inpro=&bmfl=&dup=&orpro=")
+    for i in range(-1, 0):  # 设置循环，i从0到100，每页10条
+        url = baseurl + str(i + 1) + str("&n=2&inpro=&bmfl=&dup=&orpro=")
         htmlJson = askURL(url)  # 保存获取到的json对象
 
 # 2.1 逐一解析数据
@@ -43,23 +43,26 @@ def getData(baseurl):
             data = []  # 新建列表来存放每一条政策内容
 
             titles = item.get('title') #获取标题
-            data.append(titles)
+            data.append(titles)     #添加标题
 
             time = item.get('pubtimeStr')
-            data.append(time)
+            data.append(time)   #添加发表时间
 
             summary =item.get('summary')
-            data.append(summary)
+            data.append(summary)    #添加摘要
 
             urlDe = item.get('url')
-            # htmldetail = getDetails(urlDe)
-            data.append(urlDe)
+            data.append(urlDe)  #添加标题
+
+            htmldetail = getDetails(urlDe)  #获取详情页URL
+            fwords = getFormatWord(htmldetail)     #调用2.4，得到有格式的正文
+            data.append(fwords) #添加带格式的标题
+
+            # print(words)
+            # print(htmldetail)
 
             datalist.append(data)
         print(datalist)
-
-
-
 
 
     return datalist
@@ -85,7 +88,7 @@ def getDetails(urlDe):
     head = {
         "User-Agent": "Mozilla / 5.0(Macintosh;IntelMacOSX10_15_2) AppleWebKit / 537.36(KHTML, likeGecko) Chrome / 87.0.4280.88Safari / 537.36"}
     request = urllib.request.Request(urlDe, headers=head)
-    html = ""
+    htmldetail = ""
     try:
         response = urllib.request.urlopen(request)
         htmldetail = response.read().decode("utf-8")
@@ -95,7 +98,24 @@ def getDetails(urlDe):
         if hasattr(e, "reason"):
             print(e.reason)
     return htmldetail
-# 2.4 解析获取到的详情页，传回2.1 写入data中
+
+# 2.4 解析获取到详情页，带格式的data传回2.1
+def getFormatWord(htmldetail):
+    soup = BeautifulSoup(htmldetail,"html.parser")
+    for item in soup.find_all('div',class_="pages_content"):
+        item = str(item)
+        return item
+
+# 2.5解析获取到详情页，不带格式的data传回2.1
+def getPureWord(htmldetail):
+    soup = BeautifulSoup()
+
+
+
+
+
+
+
 
 
 
@@ -105,13 +125,13 @@ def saveData(datalist,savapath):
     print("开始储存数据")
     book = xlwt.Workbook(encoding="utf-8",style_compression=0)  # 创建workbook对象
     sheet = book.add_sheet("政策解读",cell_overwrite_ok=True)  # 创建工作表
-    col = ("政策标题", "政策发布时间", "政策摘要","政策链接")
-    for i in range(0, 4):
+    col = ("政策标题", "政策发布时间", "政策摘要","政策链接","解读正文（带格式）")
+    for i in range(0, 5):
         sheet.write(0, i, col[i]) #列名
-    for i in range(0, 100):
+    for i in range(0, 2):
         print("第%d条"%(i+1))
         data = datalist[i]
-        for j in range(0,4):
+        for j in range(0,5):
             sheet.write(i+1,j,data[j])  #数据
 
     book.save(savapath)
