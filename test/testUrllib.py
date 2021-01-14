@@ -14,7 +14,7 @@ req = urllib.request.Request(url= url, headers=headers)
 response = urllib.request.urlopen(req)
 print(response.read().decode("utf-8"))
 '''
-url = "http://www.gov.cn/zhengce/2021-01/12/content_5579195.htm"
+url = "http://www.gov.cn/zhengce/2021-01/13/content_5579486.htm"
 headers = { "User-Agent": "Mozilla / 5.0(Macintosh;IntelMacOSX10_15_2) AppleWebKit / 537.36(KHTML, likeGecko) Chrome / 87.0.4280.88Safari / 537.36"}
 req = urllib.request.Request(url= url, headers=headers)
 response = urllib.request.urlopen(req)

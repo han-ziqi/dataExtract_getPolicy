@@ -5,6 +5,8 @@
 #@Software : PyCharm
 
 import json
+import bs4
+from bs4 import BeautifulSoup
 import re  # 正则表达式进行文字匹配
 import urllib.request, urllib.error  # 指定url获取网页数据
 import xlwt  # 进行Excel操作
@@ -33,18 +35,14 @@ def getData(baseurl):
     for i in range(-1, 9):  # 设置循环，i从0到100，每页10条
         url = baseurl + str(i + 1) + str("&n=10&inpro=&bmfl=&dup=&orpro=")
         htmlJson = askURL(url)  # 保存获取到的json对象
-        # print(htmlJson)
-        # print("__________-------------------------")
 
-
-
-# 2、逐一解析数据
+# 2.1 逐一解析数据
         htmldict = json.loads(htmlJson) #将json对象转换为python字典
-        v0 = htmldict.get("searchVO").get('listVO')
-        for item in v0:
-            data = []  # 新建列表来存放一条政策内容
+        vO = htmldict.get("searchVO").get('listVO')
+        for item in vO:
+            data = []  # 新建列表来存放每一条政策内容
 
-            titles = item.get('title')
+            titles = item.get('title') #获取标题
             data.append(titles)
 
             time = item.get('pubtimeStr')
@@ -53,8 +51,9 @@ def getData(baseurl):
             summary =item.get('summary')
             data.append(summary)
 
-            url = item.get('url')
-            data.append(url)
+            urlDe = item.get('url')
+            # htmldetail = getDetails(urlDe)
+            data.append(urlDe)
 
             datalist.append(data)
         print(datalist)
@@ -65,22 +64,39 @@ def getData(baseurl):
 
     return datalist
 
-# 得到指定一个URL的网页内容
+# 2.2 定义方法：获得政策库文件列表
 def askURL(url):
     # 用户代理，表示告诉服务器，我们是什么浏览器，本质是告诉浏览器，我们可以接受什么水平的内容
     head = { "User-Agent": "Mozilla / 5.0(Macintosh;IntelMacOSX10_15_2) AppleWebKit / 537.36(KHTML, likeGecko) Chrome / 87.0.4280.88Safari / 537.36"}
     request = urllib.request.Request(url, headers=head)
-    html = ""
+    htmllist = ""
     try:
         response = urllib.request.urlopen(request)
-        html = response.read().decode("utf-8")
-        # print(html)
+        htmllist = response.read().decode("utf-8")
     except urllib.error.URLError as e:
         if hasattr(e, "code"):
             print(e.code)
         if hasattr(e, "reason"):
             print(e.reason)
-    return html
+    return htmllist
+
+# 2.3 定义方法：读取datalist里url，进入详情页获取详情页面
+def getDetails(urlDe):
+    head = {
+        "User-Agent": "Mozilla / 5.0(Macintosh;IntelMacOSX10_15_2) AppleWebKit / 537.36(KHTML, likeGecko) Chrome / 87.0.4280.88Safari / 537.36"}
+    request = urllib.request.Request(urlDe, headers=head)
+    html = ""
+    try:
+        response = urllib.request.urlopen(request)
+        htmldetail = response.read().decode("utf-8")
+    except urllib.error.URLError as e:
+        if hasattr(e, "code"):
+            print(e.code)
+        if hasattr(e, "reason"):
+            print(e.reason)
+    return htmldetail
+# 2.4 解析获取到的详情页，传回2.1 写入data中
+
 
 
 
