@@ -7,7 +7,6 @@
 import re
 import random
 import time
-import numpy as npl
 import json
 from bs4 import BeautifulSoup
 import urllib.request, urllib.error  # 指定url获取网页数据
@@ -186,11 +185,8 @@ def getImgName(html_detail,pre_url):
     soup = BeautifulSoup(html_detail, "html.parser")
     for item_7 in soup.find_all('div', class_="pages_content"):
         img_link_list = re.findall(findImgSrc, str(item_7))
-        if len(img_link_list) != 0:
-            img_link = ",".join(img_link_list)
-            img_url = pre_url + img_link
-        else:
-            img_url=""
+        img_url_list = [pre_url + str(i) for i in img_link_list]
+        img_url = "     ".join(img_url_list)
     return img_url
 
 
