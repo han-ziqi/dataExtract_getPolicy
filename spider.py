@@ -186,8 +186,11 @@ def getImgName(html_detail,pre_url):
     soup = BeautifulSoup(html_detail, "html.parser")
     for item_7 in soup.find_all('div', class_="pages_content"):
         img_link_list = re.findall(findImgSrc, str(item_7))
-        img_link = ",".join(img_link_list)
-        img_url = pre_url + img_link
+        if len(img_link_list) != 0:
+            img_link = ",".join(img_link_list)
+            img_url = pre_url + img_link
+        else:
+            img_url=""
     return img_url
 
 
