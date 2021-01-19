@@ -48,7 +48,7 @@ def getData(base_url):
         for item in vO:
             data = []  # 新建列表来存放每一条政策内容
             file_url = "" # 初始化file_name
-            # img_url = "" # 初始化img_url
+            img_add = "" # 初始化img_url
 
             titles = item.get('title')  # 获取标题
             data.append(titles)  # 添加标题
@@ -76,13 +76,14 @@ def getData(base_url):
 
             pre_url_list = re.findall(findPreUrl,str(urlDe)) # 通过正则表达式提取详情页URL的前半段
             pre_url = "".join(pre_url_list)   # 遍历提取到的数组成字符串，得到URL前半段
+            print(type(pre_url))
 
             if len(file_name) != 0:
                 file_url = pre_url + file_name  # 文件完整URL前半段+文件后半段名字
             print(file_url)
 
 
-            img_add = getImgName(htmldetail)  # 调用2.7，得到图片后半段名字
+            img_add = getImgName(htmldetail,pre_url)  # 调用2.7，得到图片后半段名字
             print(img_add)
 
 
@@ -181,12 +182,13 @@ def getFileName(html_detail):
 
 
 # 2.7解析获取到的详情页，把图片地址传回2.1，图片可能有多个，因此直接在此方法里拼接完整URL，再返回2.1
-def getImgName(html_detail):
+def getImgName(html_detail,pre_url):
     soup = BeautifulSoup(html_detail, "html.parser")
     for item_7 in soup.find_all('div', class_="pages_content"):
-        img_link = re.findall(findImgSrc, str(item_7))
-    img_links = ",".join(img_link)
-    return img_links
+        img_link_list = re.findall(findImgSrc, str(item_7))
+        img_link = ",".join(img_link_list)
+        img_url = pre_url + img_link
+    return img_url
 
 
 '''
