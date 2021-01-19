@@ -4,12 +4,14 @@
 # @File : spider.py
 # @Software : PyCharm
 
+import re
 import random
 import time
-import numpy as np
+import numpy as npl
 import json
 from bs4 import BeautifulSoup
 import urllib.request, urllib.error  # 指定url获取网页数据
+from urllib.request import urlretrieve
 import xlwt  # 进行Excel操作
 import sqlite3  # 进行SQLite数据库操作
 
@@ -22,14 +24,21 @@ def main():
     db_path = "policy5000.db"
     # 3、保存数据
     # saveData(datalist, save_path)
-    saveData2DB(datalist, db_path)
+    # saveData2DB(datalist, db_path)
 
+
+# 文件链接的规则
+findLink = re.compile(r'<a href="(.*?)" ')  # 创建正则表达式对象，表示规则（字符串的模式）
+# 文件图片
+findImgSrc = re.compile(r'<img.*src="(.*?)"')
+# 详情页前半段URL的提取
+findPreUrl = re.compile(r'(.*)content')
 
 # 1、爬取网页
 def getData(base_url):
     datalist = []
 
-    for i in range(690,691 ):  # 设置循环，i从0到100，每页10条
+    for i in range(691, 692):  # 设置循环，i从0到100，每页10条
         url = base_url + str(i + 1) + str("&n=10&inpro=&bmfl=&dup=&orpro=")
         htmlJson = askURL(url)  # 保存获取到的json对象
 
@@ -38,12 +47,16 @@ def getData(base_url):
         vO = htmldict.get("searchVO").get('listVO')
         for item in vO:
             data = []  # 新建列表来存放每一条政策内容
+            file_url = "" # 初始化file_name
+            # img_url = "" # 初始化img_url
 
             titles = item.get('title')  # 获取标题
             data.append(titles)  # 添加标题
+            print(titles)
 
             pub_time = item.get('pubtimeStr')
             data.append(pub_time)  # 添加发表时间
+            print(pub_time)
 
             summary = item.get('summary')
             data.append(summary)  # 添加摘要
@@ -52,16 +65,40 @@ def getData(base_url):
             data.append(urlDe)  # 添加标题
 
             htmldetail = getDetails(urlDe)  # 获取详情页URL
+
             f_words = getFormatWord(htmldetail)  # 调用2.4，得到有格式的正文(item1)
             data.append(f_words)  # 添加带格式的内容
 
             p_words = getPureWord(htmldetail)  # 调用2.5，得到无格式的正文(item2)
             data.append(p_words)  # 添加不带格式的内容
 
+            file_name = getFileName(htmldetail)  # 调用2.6，得到文件后半段名字
+
+            pre_url_list = re.findall(findPreUrl,str(urlDe)) # 通过正则表达式提取详情页URL的前半段
+            pre_url = "".join(pre_url_list)   # 遍历提取到的数组成字符串，得到URL前半段
+
+            if len(file_name) != 0:
+                file_url = pre_url + file_name  # 文件完整URL前半段+文件后半段名字
+            print(file_url)
+
+
+            img_add = getImgName(htmldetail)  # 调用2.7，得到图片后半段名字
+            print(img_add)
+
+
+            """
+            图片(文件)下载,核心方法是 urllib.urlrequest 模块的 urlretrieve()方法
+             urlretrieve(url, filename=None, reporthook=None, data=None)
+             url: 文件url
+             filename: 保存到本地时,使用的文件(路径)名称
+             reporthook: 文件传输时的回调函数
+             data: post提交到服务器的数据
+             该方法返回一个二元元组("本地文件路径",<http.client.HTTPMessage对象>)
+            """
+
             datalist.append(data)
 
-        t = random.random()
-        t = random.uniform(1, 10)
+        t = random.uniform(0,0.3)
         time.sleep(t)
         # 仪表盘：
         m = i + 1  # 表示第x个
@@ -70,6 +107,7 @@ def getData(base_url):
         # print(datalist)
 
     return datalist
+
 
 # 2.1 创建列表：搜集到常用headers，随机选择以应对403封禁
 my_headers = [
@@ -80,6 +118,7 @@ my_headers = [
     "Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.7 (KHTML, like Gecko) Ubuntu/11.04 Chromium/16.0.912.77 Chrome/16.0.912.77 Safari/535.7",
     "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0"
 ]
+
 
 # 2.2 定义方法：获得政策库文件列表
 def askURL(url):
@@ -97,6 +136,7 @@ def askURL(url):
             print(e.reason)
     return html_list
 
+
 # 2.3 定义方法：读取datalist里url，进入详情页获取详情页面
 def getDetails(url_De):
     head = {"User-Agent": random.choice(my_headers)}
@@ -112,21 +152,41 @@ def getDetails(url_De):
             print(e.reason)
     return html_detail
 
+
 # 2.4 解析获取到详情页，带格式的data传回2.1
 def getFormatWord(html_detail):
     soup = BeautifulSoup(html_detail, "html.parser")  # 解析页面
-    for item_1 in soup.find_all('div', class_="pages_content"):  # 提取div标签中class为pages_content的内容
-        item_1 = str(item_1)  # 格式化成字符串形式
-        return item_1
+    for item_4 in soup.find_all('div', class_="pages_content"):  # 提取div标签中class为pages_content的内容
+        item_4 = str(item_4)  # 格式化成字符串形式
+        return item_4
+
 
 # 2.5解析获取到详情页，不带格式的data传回2.1
 def getPureWord(html_detail):
     soup = BeautifulSoup(html_detail, "html.parser")
-    for item_2 in soup.find_all('div', class_="pages_content"):
-        item_2 = soup.find_all('p')
-        result = [p.get_text() for p in item_2]
+    for item_5 in soup.find_all('div', class_="pages_content"):
+        item_5 = soup.find_all('p')
+        result = [p.get_text() for p in item_5]
         p_word = "".join(result)  # 使用join方法，分隔符为空
     return p_word
+
+
+# 2.6解析获取到的详情页，把文件名传回2.1
+def getFileName(html_detail):
+    soup = BeautifulSoup(html_detail, "html.parser")
+    for item_6 in soup.find_all('div', class_="pages_content"):
+        file_link = re.findall(findLink, str(item_6))
+        f_link = "".join(file_link)
+    return f_link
+
+
+# 2.7解析获取到的详情页，把图片地址传回2.1，图片可能有多个，因此直接在此方法里拼接完整URL，再返回2.1
+def getImgName(html_detail):
+    soup = BeautifulSoup(html_detail, "html.parser")
+    for item_7 in soup.find_all('div', class_="pages_content"):
+        img_link = re.findall(findImgSrc, str(item_7))
+    img_links = ",".join(img_link)
+    return img_links
 
 
 '''
@@ -159,7 +219,7 @@ def saveData2DB(datalist, db_path):
             data[index] = "'''" + data[index] + "'''"  # 作用：把每一个内容都加上单引号
             sql = '''
             insert into policy5000(title,pub_date,summary,url,fdetail,pdetail)
-            values(%s)'''% ",".join(data)
+            values(%s)''' % ",".join(data)
         cur.execute(sql)
         conn.commit()
     cur.close()
