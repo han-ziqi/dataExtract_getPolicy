@@ -4,8 +4,10 @@
 # @File : spider.py
 # @Software : PyCharm
 
+import random
+import time
+import numpy as np
 import json
-import bs4
 from bs4 import BeautifulSoup
 import urllib.request, urllib.error  # 指定url获取网页数据
 import xlwt  # 进行Excel操作
@@ -14,11 +16,10 @@ import sqlite3  # 进行SQLite数据库操作
 
 def main():
     base_url = "http://sousuo.gov.cn/data?t=zhengcelibrary_or&q=&timetype=timeqb&mintime=&maxtime=&sort=pubtime&sortType=1&searchfield=title&pcodeJiguan=&childtype=&subchildtype=&tsbq=&pubtimeyear=&puborg=&pcodeYear=&pcodeNum=&filetype=&p="
-
     # 1、爬取网页
     datalist = getData(base_url)
     # save_path = "政策解读1-1000.xls"
-    db_path = "policy_t.db"
+    db_path = "policy5000.db"
     # 3、保存数据
     # saveData(datalist, save_path)
     saveData2DB(datalist, db_path)
@@ -28,7 +29,7 @@ def main():
 def getData(base_url):
     datalist = []
 
-    for i in range(-1, 0):  # 设置循环，i从0到100，每页10条
+    for i in range(690,691 ):  # 设置循环，i从0到100，每页10条
         url = base_url + str(i + 1) + str("&n=10&inpro=&bmfl=&dup=&orpro=")
         htmlJson = askURL(url)  # 保存获取到的json对象
 
@@ -41,8 +42,8 @@ def getData(base_url):
             titles = item.get('title')  # 获取标题
             data.append(titles)  # 添加标题
 
-            time = item.get('pubtimeStr')
-            data.append(time)  # 添加发表时间
+            pub_time = item.get('pubtimeStr')
+            data.append(pub_time)  # 添加发表时间
 
             summary = item.get('summary')
             data.append(summary)  # 添加摘要
@@ -59,16 +60,31 @@ def getData(base_url):
 
             datalist.append(data)
 
-        # print(datalist)  #预览效果
+        t = random.random()
+        t = random.uniform(1, 10)
+        time.sleep(t)
+        # 仪表盘：
+        m = i + 1  # 表示第x个
+        n = i + 2  # 到第x个
+        print("正在爬取第%d0~%d0条网页，完成后休眠%f秒" % (m, n, t))
+        # print(datalist)
 
     return datalist
 
+# 2.1 创建列表：搜集到常用headers，随机选择以应对403封禁
+my_headers = [
+    "Mozilla / 5.0(Macintosh;IntelMacOSX10_15_2) AppleWebKit / 537.36(KHTML, likeGecko) Chrome / 87.0.4280.88Safari / 537.36",
+    "Mozilla / 5.0(Macintosh;Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/537.75.14",
+    "Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.7 (KHTML, like Gecko) Ubuntu/11.04 Chromium/16.0.912.77 Chrome/16.0.912.77 Safari/535.7",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0"
+]
 
 # 2.2 定义方法：获得政策库文件列表
 def askURL(url):
     # 用户代理，表示告诉服务器，我们是什么浏览器，本质是告诉浏览器，我们可以接受什么水平的内容
-    head = {
-        "User-Agent": "Mozilla / 5.0(Macintosh;IntelMacOSX10_15_2) AppleWebKit / 537.36(KHTML, likeGecko) Chrome / 87.0.4280.88Safari / 537.36"}
+    head = {"User-Agent": random.choice(my_headers)}
     request = urllib.request.Request(url, headers=head)
     html_list = ""
     try:
@@ -81,11 +97,9 @@ def askURL(url):
             print(e.reason)
     return html_list
 
-
 # 2.3 定义方法：读取datalist里url，进入详情页获取详情页面
 def getDetails(url_De):
-    head = {
-        "User-Agent": "Mozilla / 5.0(Macintosh;IntelMacOSX10_15_2) AppleWebKit / 537.36(KHTML, likeGecko) Chrome / 87.0.4280.88Safari / 537.36"}
+    head = {"User-Agent": random.choice(my_headers)}
     request = urllib.request.Request(url_De, headers=head)
     html_detail = ""
     try:
@@ -98,14 +112,12 @@ def getDetails(url_De):
             print(e.reason)
     return html_detail
 
-
 # 2.4 解析获取到详情页，带格式的data传回2.1
 def getFormatWord(html_detail):
     soup = BeautifulSoup(html_detail, "html.parser")  # 解析页面
     for item_1 in soup.find_all('div', class_="pages_content"):  # 提取div标签中class为pages_content的内容
         item_1 = str(item_1)  # 格式化成字符串形式
         return item_1
-
 
 # 2.5解析获取到详情页，不带格式的data传回2.1
 def getPureWord(html_detail):
@@ -140,24 +152,24 @@ def saveData(datalist,sava_path):
 def saveData2DB(datalist, db_path):
     init_db(db_path)
     conn = sqlite3.connect(db_path)
+    print("连接数据库成功，开始保存")
     cur = conn.cursor()
-
     for data in datalist:
         for index in range(len(data)):
-            data[index] = "'" + data[index] + "'"  # 作用：把每一个内容都加上单引号
+            data[index] = "'''" + data[index] + "'''"  # 作用：把每一个内容都加上单引号
             sql = '''
-            insert into policy_t(title,pub_date,summary,url,fdetail,pdetail)
-           values(%s)''' % ",".join(data)
-        print(sql)
+            insert into policy5000(title,pub_date,summary,url,fdetail,pdetail)
+            values(%s)'''% ",".join(data)
         cur.execute(sql)
         conn.commit()
     cur.close()
+    print("保存成功")
     conn.close()
 
 
 def init_db(db_path):
     sql = '''
-        create table policy_t
+        create table policy5000
         (
           id integer primary key autoincrement,
           title varchar,
