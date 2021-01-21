@@ -26,12 +26,17 @@ def main():
     # saveData2DB(datalist, db_path)
 
 
-# 文件链接的规则
-findLink = re.compile(r'<a href="(.*?)" ')  # 创建正则表达式对象，表示规则（字符串的模式）
-# 文件图片
-findImgSrc = re.compile(r'<img.*src="(.*?)"')
+# 文件地址提取
+findFileLink = re.compile(r'<a href="(.*?)" ')  # 创建正则表达式对象，表示规则（字符串的模式）
+# 文件名称提取
+findFileName = re.compile(r'files/(.*)')
+# 图片地址提取
+findImgLink = re.compile(r'<img.*src="(.*?)"')
+# 图片名称提取
+findImgName = re.compile(r'images/(.*)')
 # 详情页前半段URL的提取
 findPreUrl = re.compile(r'(.*)content')
+
 
 # 1、爬取网页
 def getData(base_url):
@@ -46,8 +51,8 @@ def getData(base_url):
         vO = htmldict.get("searchVO").get('listVO')
         for item in vO:
             data = []  # 新建列表来存放每一条政策内容
-            file_url = "" # 初始化file_name
-            img_add = "" # 初始化img_url
+            file_url = ""  # 初始化file_name
+            img_add = ""  # 初始化img_url
 
             titles = item.get('title')  # 获取标题
             data.append(titles)  # 添加标题
@@ -61,7 +66,7 @@ def getData(base_url):
             data.append(summary)  # 添加摘要
 
             urlDe = item.get('url')
-            data.append(urlDe)  # 添加标题
+            data.append(urlDe)  # 添加详情页URL
 
             htmldetail = getDetails(urlDe)  # 获取详情页URL
 
@@ -71,34 +76,39 @@ def getData(base_url):
             p_words = getPureWord(htmldetail)  # 调用2.5，得到无格式的正文(item2)
             data.append(p_words)  # 添加不带格式的内容
 
-            file_name = getFileName(htmldetail)  # 调用2.6，得到文件后半段名字
+            file_link = getFileLink(htmldetail)  # 调用2.6，得到文件后半段名字
+            file_name = getFileName(htmldetail)  # 调用2.7 得到文件名字
 
-            pre_url_list = re.findall(findPreUrl,str(urlDe)) # 通过正则表达式提取详情页URL的前半段
-            pre_url = "".join(pre_url_list)   # 遍历提取到的数组成字符串，得到URL前半段
-            print(type(pre_url))
+            pre_url_list = re.findall(findPreUrl, str(urlDe))  # 通过正则表达式提取详情页URL的前半段
+            pre_url = "".join(pre_url_list)  # 遍历提取到的数组成字符串，得到URL前半段
 
-            if len(file_name) != 0:
-                file_url = pre_url + file_name  # 文件完整URL前半段+文件后半段名字
+            # 实现文件的下载，保存格式为发布日期+标题+后半段文件名
+            if len(file_link) != 0:
+                file_url = pre_url + file_link  # 文件完整URL前半段+文件后半段名字
+
+                download_file_name = titles + file_name
+                urllib.request.urlretrieve(url=file_url,
+                                           filename="/Users/han/Documents/Python/GovPolicy/Downloads/files/" + pub_time + download_file_name)
             print(file_url)
 
+            img_link_list = getImgUrl(htmldetail, pre_url)  # 调用2.8，得到图片链接的列表
+            img_name_1 = getImgName(htmldetail, titles)  # 调用2.9，得到图片第一张的名字
+            print(img_name_1)
+            img_link = " ".join(img_link_list)
 
-            img_add = getImgName(htmldetail,pre_url)  # 调用2.7，得到图片后半段名字
-            print(img_add)
-
-
-            """
-            图片(文件)下载,核心方法是 urllib.urlrequest 模块的 urlretrieve()方法
-             urlretrieve(url, filename=None, reporthook=None, data=None)
-             url: 文件url
-             filename: 保存到本地时,使用的文件(路径)名称
-             reporthook: 文件传输时的回调函数
-             data: post提交到服务器的数据
-             该方法返回一个二元元组("本地文件路径",<http.client.HTTPMessage对象>)
-            """
+            # 实现图片的下载，保存格式为第X张+YYYY.MM.DD+标题+后半段文件名
+            if len(img_link_list) != 0:
+                for index, item_img in enumerate(img_link_list):
+                    urllib.request.urlretrieve(url=item_img,
+                                               filename="/Users/han/Documents/Python/GovPolicy/Downloads/images/" + "第%s张" %
+                                                        str(index + 1) + pub_time + img_name_1)
+                print(img_link_list)
+            else:
+                print()
 
             datalist.append(data)
 
-        t = random.uniform(0,0.3)
+        t = random.uniform(1, 10)
         time.sleep(t)
         # 仪表盘：
         m = i + 1  # 表示第x个
@@ -171,23 +181,49 @@ def getPureWord(html_detail):
     return p_word
 
 
-# 2.6解析获取到的详情页，把文件名传回2.1
-def getFileName(html_detail):
+# 2.6解析获取到的详情页，把文件地址传回2.1
+def getFileLink(html_detail):
     soup = BeautifulSoup(html_detail, "html.parser")
     for item_6 in soup.find_all('div', class_="pages_content"):
-        file_link = re.findall(findLink, str(item_6))
+        file_link = re.findall(findFileLink, str(item_6))
         f_link = "".join(file_link)
     return f_link
 
 
-# 2.7解析获取到的详情页，把图片地址传回2.1，图片可能有多个，因此直接在此方法里拼接完整URL，再返回2.1
-def getImgName(html_detail,pre_url):
+# 2.7解析获取到的详情页，把文件名传回2.1
+def getFileName(html_detail):
     soup = BeautifulSoup(html_detail, "html.parser")
     for item_7 in soup.find_all('div', class_="pages_content"):
-        img_link_list = re.findall(findImgSrc, str(item_7))
+        file_link = re.findall(findFileLink, str(item_7))
+        f_link = "".join(file_link)
+        file_name = re.findall(findFileName, f_link)
+        f_name = "".join(file_name)
+    return f_name
+
+
+# 2.8解析获取到的详情页，把图片地址传回2.1，图片可能有多个，因此直接在此方法里拼接完整URL，再返回2.1
+def getImgUrl(html_detail, pre_url):
+    soup = BeautifulSoup(html_detail, "html.parser")
+    for item_8 in soup.find_all('div', class_="pages_content"):
+        img_link_list = re.findall(findImgLink, str(item_8))
         img_url_list = [pre_url + str(i) for i in img_link_list]
-        img_url = "     ".join(img_url_list)
-    return img_url
+    return img_url_list
+
+
+# 2.9解析获取到的详情页，把图片名字传回2.1，图片可能有多个，但是只需要第一张图片完整名字即可，后面在下载的时候循环添加名字就行
+def getImgName(html_detail, titles):
+    soup = BeautifulSoup(html_detail, "html.parser")
+    for item_9 in soup.find_all('div', class_="pages_content"):
+        img_link = re.findall(findImgLink, str(item_9))
+        if len(img_link) != 0:
+            img_link_1 = img_link[0]
+            img_last_name_1_list = re.findall(findImgName, img_link_1)
+            img_last_name_1 = "".join(img_last_name_1_list)
+            img_name_1 = titles + img_last_name_1
+        else:
+            img_name_1 = ""
+
+    return img_name_1
 
 
 '''
