@@ -1,26 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="policy100" uuid="10414d02-39e3-44e6-8268-c7078dec4296">
-      <driver-ref>sqlite.xerial</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/policy100.db</jdbc-url>
-      <libraries>
-        <library>
-          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.31.1/sqlite-jdbc-3.31.1.jar</url>
-        </library>
-        <library>
-          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.31.1/license.txt</url>
-        </library>
-      </libraries>
-    </data-source>
-    <data-source source="LOCAL" name="policy3000.db" uuid="c4a528e4-6352-4320-8170-a4a85f541604">
-      <driver-ref>sqlite.xerial</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/policy3000.db</jdbc-url>
-    </data-source>
     <data-source source="LOCAL" name="policy2000" uuid="507eef25-d5a7-47a4-a20a-f6187974567b">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
@@ -34,24 +14,6 @@
           <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.31.1/license.txt</url>
         </library>
       </libraries>
-    </data-source>
-    <data-source source="LOCAL" name="policy_t.db" uuid="78d92836-abf3-4885-8a67-161b24e7553e">
-      <driver-ref>sqlite.xerial</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/test/policy_t.db</jdbc-url>
-    </data-source>
-    <data-source source="LOCAL" name="policy_t.db [2]" uuid="dd3c6489-bd4b-4503-8004-0cedb4e1c967">
-      <driver-ref>sqlite.xerial</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/policy_t.db</jdbc-url>
-    </data-source>
-    <data-source source="LOCAL" name="policy5000.db" uuid="10a0107d-6973-4472-825f-a48e532f45db">
-      <driver-ref>sqlite.xerial</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/policy5000.db</jdbc-url>
     </data-source>
     <data-source source="LOCAL" name="identifier.sqlite" uuid="0edc2a1d-f526-4918-a446-cbb430548079">
       <driver-ref>sqlite.xerial</driver-ref>

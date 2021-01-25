@@ -1,4 +1,4 @@
-# -*- codeing = utf-8 -*-
+# -*- coding = utf-8 -*-
 # @Time : 2021/1/12 3:48 下午
 # @Author : Han
 # @File : spider.py
@@ -20,10 +20,10 @@ def main():
     # 1、爬取网页
     datalist = getData(base_url)
     # save_path = "政策解读1-1000.xls"
-    db_path = "policy5000.db"
+    db_path = "policy6960.db"  # 修改23、45、282、297行
     # 3、保存数据
     # saveData(datalist, save_path)
-    # saveData2DB(datalist, db_path)
+    saveData2DB(datalist, db_path)
 
 
 # 文件地址提取
@@ -42,7 +42,7 @@ findPreUrl = re.compile(r'(.*)content')
 def getData(base_url):
     datalist = []
 
-    for i in range(691, 692):  # 设置循环，i从0到100，每页10条
+    for i in range(662, 696):  # 设置循环，i从0到100，每页10条
         url = base_url + str(i + 1) + str("&n=10&inpro=&bmfl=&dup=&orpro=")
         htmlJson = askURL(url)  # 保存获取到的json对象
 
@@ -56,11 +56,9 @@ def getData(base_url):
 
             titles = item.get('title')  # 获取标题
             data.append(titles)  # 添加标题
-            print(titles)
 
             pub_time = item.get('pubtimeStr')
             data.append(pub_time)  # 添加发表时间
-            print(pub_time)
 
             summary = item.get('summary')
             data.append(summary)  # 添加摘要
@@ -77,44 +75,56 @@ def getData(base_url):
             data.append(p_words)  # 添加不带格式的内容
 
             file_link = getFileLink(htmldetail)  # 调用2.6，得到文件后半段名字
-            file_name = getFileName(htmldetail)  # 调用2.7 得到文件名字
-
-            pre_url_list = re.findall(findPreUrl, str(urlDe))  # 通过正则表达式提取详情页URL的前半段
-            pre_url = "".join(pre_url_list)  # 遍历提取到的数组成字符串，得到URL前半段
 
             # 实现文件的下载，保存格式为发布日期+标题+后半段文件名
             if len(file_link) != 0:
+                file_name = getFileName(htmldetail)  # 调用2.7 得到文件去掉路径的名字
+                pre_url_list = re.findall(findPreUrl, str(urlDe))  # 通过正则表达式提取详情页URL的前半段
+                pre_url = "".join(pre_url_list)  # 遍历提取到的数组成字符串，得到URL前半段
                 file_url = pre_url + file_link  # 文件完整URL前半段+文件后半段名字
-
+                # 开始下载
                 download_file_name = titles + file_name
-                urllib.request.urlretrieve(url=file_url,
-                                           filename="/Users/han/Documents/Python/GovPolicy/Downloads/files/" + pub_time + download_file_name)
-            print(file_url)
+                try:
+                    urllib.request.urlretrieve(url=file_url,
+                                               filename="/Users/han/Documents/Python/GovPolicy/Downloads/files/" + pub_time + download_file_name)
+                except urllib.error.HTTPError as d_error:
+                    print("日期为" + pub_time + "的" + titles + "下载失败")
+                    pass
+            else:
+                pre_url_list = re.findall(findPreUrl, str(urlDe))  # 通过正则表达式提取详情页URL的前半段
+                pre_url = "".join(pre_url_list)  # 遍历提取到的数组成字符串，得到URL前半段
+                download_file_name = ""
+
+            data.append(download_file_name)  # 添加进数据库
 
             img_link_list = getImgUrl(htmldetail, pre_url)  # 调用2.8，得到图片链接的列表
-            img_name_1 = getImgName(htmldetail, titles)  # 调用2.9，得到图片第一张的名字
-            print(img_name_1)
-            img_link = " ".join(img_link_list)
-
             # 实现图片的下载，保存格式为第X张+YYYY.MM.DD+标题+后半段文件名
             if len(img_link_list) != 0:
+                img_name_1 = getImgName(htmldetail, titles)  # 调用2.9，得到图片第一张的名字
+                img_link = " ".join(img_link_list)
                 for index, item_img in enumerate(img_link_list):
-                    urllib.request.urlretrieve(url=item_img,
-                                               filename="/Users/han/Documents/Python/GovPolicy/Downloads/images/" + "第%s张" %
-                                                        str(index + 1) + pub_time + img_name_1)
-                print(img_link_list)
+                    try:
+                        urllib.request.urlretrieve(url=item_img,
+                                                   filename="/Users/han/Documents/Python/GovPolicy/Downloads/images/" + "第%s张" % str(
+                                                       index + 1) + pub_time + img_name_1)
+                    except urllib.error.HTTPError as d_error:
+                        print("日期为" + pub_time + "的" + titles + "下载失败")
+                        pass
+                    continue
             else:
-                print()
-
+                img_link = ""
+            data.append(img_link)
             datalist.append(data)
+            print(titles + pub_time)
 
+        # 设置休眠，每爬10条休息1，10秒随机时间
         t = random.uniform(1, 10)
         time.sleep(t)
         # 仪表盘：
         m = i + 1  # 表示第x个
         n = i + 2  # 到第x个
         print("正在爬取第%d0~%d0条网页，完成后休眠%f秒" % (m, n, t))
-        # print(datalist)
+
 
     return datalist
 
@@ -137,7 +147,7 @@ def askURL(url):
     request = urllib.request.Request(url, headers=head)
     html_list = ""
     try:
-        response = urllib.request.urlopen(request)
+        response = urllib.request.urlopen(request, timeout=10)
         html_list = response.read().decode("utf-8")
     except urllib.error.URLError as e:
         if hasattr(e, "code"):
@@ -153,7 +163,7 @@ def getDetails(url_De):
     request = urllib.request.Request(url_De, headers=head)
     html_detail = ""
     try:
-        response = urllib.request.urlopen(request)
+        response = urllib.request.urlopen(request, timeout=10)
         html_detail = response.read().decode("utf-8")
     except urllib.error.URLError as e:
         if hasattr(e, "code"):
@@ -178,7 +188,7 @@ def getPureWord(html_detail):
         item_5 = soup.find_all('p')
         result = [p.get_text() for p in item_5]
         p_word = "".join(result)  # 使用join方法，分隔符为空
-    return p_word
+        return p_word
 
 
 # 2.6解析获取到的详情页，把文件地址传回2.1
@@ -187,7 +197,11 @@ def getFileLink(html_detail):
     for item_6 in soup.find_all('div', class_="pages_content"):
         file_link = re.findall(findFileLink, str(item_6))
         f_link = "".join(file_link)
-    return f_link
+        suffix = ("doc", "pdf")
+        if f_link.endswith(suffix):
+            return f_link
+        else:
+            return ""
 
 
 # 2.7解析获取到的详情页，把文件名传回2.1
@@ -198,7 +212,7 @@ def getFileName(html_detail):
         f_link = "".join(file_link)
         file_name = re.findall(findFileName, f_link)
         f_name = "".join(file_name)
-    return f_name
+        return f_name
 
 
 # 2.8解析获取到的详情页，把图片地址传回2.1，图片可能有多个，因此直接在此方法里拼接完整URL，再返回2.1
@@ -207,7 +221,12 @@ def getImgUrl(html_detail, pre_url):
     for item_8 in soup.find_all('div', class_="pages_content"):
         img_link_list = re.findall(findImgLink, str(item_8))
         img_url_list = [pre_url + str(i) for i in img_link_list]
-    return img_url_list
+        img_url = "".join(img_link_list)
+        suffix = "jpg"
+        if img_url.endswith(suffix):
+            return img_url_list
+        else:
+            return []
 
 
 # 2.9解析获取到的详情页，把图片名字传回2.1，图片可能有多个，但是只需要第一张图片完整名字即可，后面在下载的时候循环添加名字就行
@@ -222,7 +241,6 @@ def getImgName(html_detail, titles):
             img_name_1 = titles + img_last_name_1
         else:
             img_name_1 = ""
-
     return img_name_1
 
 
@@ -253,12 +271,19 @@ def saveData2DB(datalist, db_path):
     cur = conn.cursor()
     for data in datalist:
         for index in range(len(data)):
-            data[index] = "'''" + data[index] + "'''"  # 作用：把每一个内容都加上单引号
+            if index == 4 or index == 5:  # 带格式的详情和不带格式的详情加三引号，防止文本中出现单双都用导致保存失败
+                data[index] = "'''" + data[index] + "'''"
+            else:
+                data[index] = "'" + data[index] + "'"  # 其他单引号即可
             sql = '''
-            insert into policy5000(title,pub_date,summary,url,fdetail,pdetail)
+            insert into policy6960(title,pub_date,summary,url,fdetail,pdetail,havefile,haveimg)
             values(%s)''' % ",".join(data)
-        cur.execute(sql)
-        conn.commit()
+            try:
+                cur.execute(sql)
+                conn.commit()
+            except sqlite3.OperationalError as e:
+                continue
+
     cur.close()
     print("保存成功")
     conn.close()
@@ -266,7 +291,7 @@ def saveData2DB(datalist, db_path):
 
 def init_db(db_path):
     sql = '''
-        create table policy5000
+        create table policy6960
         (
           id integer primary key autoincrement,
           title varchar,
@@ -274,7 +299,9 @@ def init_db(db_path):
           summary varchar,
           url varchar,
           fdetail varchar ,
-          pdetail varchar 
+          pdetail varchar ,
+          havefile varchar,
+          haveimg varchar 
         )'''
 
     # 创建数据表
