@@ -122,7 +122,7 @@ def getData(base_url):
                             urllib.request.urlretrieve(url=item_img,
                                                        filename="/Users/han/Documents/Python/GovPolicy/Downloads/images/" + "第%s张" % str(
                                                            index + 1) + pub_time + img_name_1)
-                        except urllib.error.HTTPError as d_error:
+                        except urllib.error.HTTPError:
                             print("日期为" + pub_time + "的" + titles + "下载失败")
                             continue
                         except socket.timeout:
@@ -176,7 +176,7 @@ def askURL(url):
 
 # 2.1解析获取到的详情页，拿到政策来源返回1.
 def getSource(source_page):
-    source_list = re.findall(findSource,str(source_page))
+    source_list = re.findall(findSource, str(source_page))
     source = "来源：" + "".join(source_list)
     return source
 
@@ -252,7 +252,7 @@ def saveData2DB(datalist, db_path):
             try:
                 cur.execute(sql)
                 conn.commit()
-            except sqlite3.OperationalError as e:
+            except sqlite3.OperationalError:
                 continue
 
     cur.close()
