@@ -14,14 +14,6 @@ import urllib.request
 import urllib.error  # 指定url获取网页数据
 import sqlite3  # 进行SQLite数据库操作
 
-'''
-Note：这是此程序可以完整实现所有功能的第一版，每次使用只需修改42、50、250、265行即可
-    改进意见：1、引入多线程操作，不然爬取6900条需要耗时85min
-            2、严格按照python编码风格修改所有变量名、注释形式
-            3、超时处理：增加下载文件超时重试机制而不是直接报错跳过失败文件；把错误网页生成单独日志
-            *4、目前程序执行时会先把保存的东西放在内存里，完整执行以后才会保存到数据库，大概一下处理110MB的数据，担心数据库出问题，可以尝试先创建数据库，然后每爬10条就写10条进去
-'''
-
 
 # 详情来源提取
 findSource = re.compile(r'来源：(.*?)</span>')
@@ -138,7 +130,7 @@ def getData(base_url):
         t = random.uniform(1, 10)
         time.sleep(t)
         # 仪表盘：
-        print("正在爬取第%d0~%d0条网页，完成后休眠%f秒" % (m, n, t))
+        print("Extracting information from the %d0~%d0th site，then sleep %f seconds" % (m, n, t))
 
     return datalist
 
@@ -287,4 +279,4 @@ def init_db(db_path):
 if __name__ == "__main__":  # 当程序执行时# 调用函数
     main()
 
-    print("爬取完毕")
+    print("Extraction Finished")
