@@ -10,7 +10,7 @@ When running, a [SQLite](https://sqlite.org/index.html) database will be created
 
 #### Here is a demo when running
 
-![demo]()
+![demo](https://github.com/han-ziqi/getPolicy/raw/master/demo/demo%20for%20policy.png)
 
 ---
 
