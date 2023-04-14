@@ -1,10 +1,6 @@
 ## README
 
-This is a data extraction program that can browse each sub-item from a given website, especially some news sites, and then save it.
-
-The program's default extracted website is from [a policy announcement website](http://sousuo.gov.cn/s.htm?t=zhengcelibrary&q=).
-
-After one complete run, this program can save approximately 7,000 pieces of data (early 2021 statistics) in about 85 minutes.
+I developed this data extraction program that is designed to extract valuable information from [a policy announcement website](http://sousuo.gov.cn/s.htm?t=zhengcelibrary&q=). This program is capable of navigating each sub-item and saving the extracted data. In just one complete run, it can save up to 7,000 pieces of data, and it takes only about 85 minutes to complete (based on early 2021 statistics). The program utilizes **Python**,and **SQLite database management system** to automate the data extraction process.
 
 When running, a [SQLite](https://sqlite.org/index.html) database will be created and the content will be stored by id, article title, post date, abstract, url, body, attachments. If the text contains any attachments, the program will also download the attachments automatically.
 
