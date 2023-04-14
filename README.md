@@ -14,7 +14,7 @@ When running, a [SQLite](https://sqlite.org/index.html) database will be created
 
 ## How to run policy.py
 
-**The program can be run directly after cloning to local (early 2021) **
+**The program can be run directly after cloning to local (early 2021)**
 
 This program has been developed for the [specific site](http://sousuo.gov.cn/s.htm?t=zhengcelibrary&q=).  If you change to another site, there is no guarantee that the subsequent analysis and saving functions will work properly.
 
